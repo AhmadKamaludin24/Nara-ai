@@ -1,0 +1,161 @@
+***
+
+title: Introduction
+subtitle: Build voice AI agents that can make and receive phone calls
+slug: quickstart/introduction
+-----------------------------
+
+## What is Vapi?
+
+Vapi is the developer platform for building voice AI agents. We handle the complex infrastructure so you can focus on creating great voice experiences.
+
+**Voice agents** allow you to:
+
+* Have natural conversations with users
+* Make and receive phone calls
+* Integrate with your existing systems and APIs
+* Handle complex workflows like appointment scheduling, customer support, and more
+
+## How voice agents work
+
+Every Vapi assistant combines three core technologies:
+
+<CardGroup cols={3}>
+  <Card title="Speech-to-Text" icon="microphone" iconType="solid">
+    Converts user speech into text that your agent can understand
+  </Card>
+
+  <Card title="Large Language Model" icon="brain" iconType="solid">
+    Processes the conversation and generates intelligent responses
+  </Card>
+
+  <Card title="Text-to-Speech" icon="volume-high" iconType="solid">
+    Converts your agent's responses back into natural speech
+  </Card>
+</CardGroup>
+
+You have full control over each component, with dozens of providers and models to choose from; OpenAI, Anthropic, Google, Gladia, Deepgram, ElevenLabs, and many, many more.
+
+## Two ways to build voice agents
+
+Vapi offers two main primitives, designed for different use cases:
+
+<CardGroup cols={2}>
+  <Card title="Assistants" icon="robot" iconType="solid" href="/assistants/quickstart">
+    **Best for:** Most use cases and fast iteration
+
+    <br />
+
+    Assistants use a single system prompt plus tools and structured outputs. Perfect for:
+
+    * Customer support
+    * Lead qualification
+    * Booking and routing
+  </Card>
+
+  <Card title="Squads" icon="users" iconType="solid" href="/squads">
+    **Best for:** Multi-assistant setups with specialization
+
+    <br />
+
+    Squads orchestrate multiple assistants with context-preserving transfers. Ideal for:
+
+    * Medical triage and scheduling
+    * E‑commerce orders, returns, VIP
+    * Property management routing
+  </Card>
+</CardGroup>
+
+## Key capabilities
+
+* **Real-time conversations:** Sub-600ms response times with natural turn-taking
+* **Phone integration:** Make and receive calls on any phone number
+* **Web integration:** Embed voice calls directly in your applications
+* **Tool integration:** Connect to your APIs, databases, and existing systems
+* **Multi-assistant orchestration (Squads):** Compose specialized assistants with seamless transfers
+
+## Choose your path
+
+<CardGroup cols={2}>
+  <Card title="Phone Calls" icon="phone" iconType="solid" href="/quickstart/phone">
+    * Create a voice agent for inbound/outbound calls
+    * Build customer support or sales automation
+    * Get started with no coding required
+
+    *Build your first voice agent in 5 minutes using our dashboard.*
+  </Card>
+
+  <Card title="Web Integration" icon="browser" iconType="solid" href="/quickstart/web">
+    * Add voice capabilities to your web application
+    * Integrate voice chat into your existing product
+    * Build with code and SDKs
+
+    *Embed live voice conversations directly in your app.*
+  </Card>
+</CardGroup>
+
+## Developer tools
+
+### Vapi CLI
+
+The Vapi CLI brings the full power of the platform to your terminal:
+
+<CardGroup cols={1}>
+  <Card title="CLI Overview" icon="terminal" iconType="solid" href="/cli">
+    Install in seconds with:
+
+    ```bash
+    curl -sSL https://vapi.ai/install.sh | bash
+    ```
+
+    Everything from the dashboard, now in your terminal.
+  </Card>
+</CardGroup>
+
+## Popular use cases
+
+<CardGroup cols={3}>
+  <Card title="Customer Support" icon="headset" iconType="solid" href="/assistants/examples/inbound-support">
+    <div class="vapi-badge vapi-badge-assistant">
+      Built with Assistants
+    </div>
+
+    Automate inbound support calls with agents that can access your knowledge base and escalate to humans when needed.
+  </Card>
+
+  <Card title="Sales & Lead Qualification" icon="phone-office" iconType="solid" href="/assistants/examples/lead-qualification">
+    <div class="vapi-badge vapi-badge-assistant">
+      Built with Assistants
+    </div>
+
+    Make outbound sales calls, qualify leads, and schedule appointments with sophisticated branching logic.
+  </Card>
+
+  <Card title="Appointment Scheduling" icon="calendar-check" iconType="solid" href="/assistants/examples/appointment-scheduling">
+    <div class="vapi-badge vapi-badge-assistant">
+      Built with Assistants
+    </div>
+
+    Handle booking requests, check availability, and confirm appointments with conditional routing.
+  </Card>
+
+  <Card title="Medical Triage & Scheduling" icon="stethoscope" iconType="solid" href="/squads/examples/clinic-triage-scheduling">
+    <div class="vapi-badge vapi-badge-squad">
+      Built with Squads
+    </div>
+
+    Emergency routing and appointment scheduling for healthcare.
+  </Card>
+
+  <Card title="E-commerce Order Management" icon="shopping-cart" iconType="solid" href="/squads/examples/ecommerce-order-management">
+    <div class="vapi-badge vapi-badge-squad">
+      Built with Squads
+    </div>
+
+    Order tracking, returns, and customer support workflows.
+  </Card>
+
+  <Card title="See more examples" icon="book" iconType="solid" href="/examples">
+    See our collection of examples covering a wide range of use cases.
+  </Card>
+</CardGroup>
