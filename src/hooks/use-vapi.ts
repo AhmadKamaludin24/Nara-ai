@@ -24,6 +24,7 @@ interface UseVapiReturn {
   endCall: () => void;
   toggleMute: () => void;
   elapsedSeconds: number;
+  error: string | null;
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────
@@ -34,6 +35,8 @@ export function useVapi(maxDuration: number = 60): UseVapiReturn {
   const [transcripts, setTranscripts] = useState<TranscriptMessage[]>([]);
   const [activeTranscript, setActiveTranscript] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const [error, setError] = useState<string | null>(null);
 
   const vapiRef = useRef<Vapi | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -56,6 +59,7 @@ export function useVapi(maxDuration: number = 60): UseVapiReturn {
         // ── Event listeners ──
         vapi.on("call-start", () => {
           setStatus("active");
+          setError(null);
           const start = Date.now();
           timerRef.current = setInterval(() => {
             const elapsed = Math.floor((Date.now() - start) / 1000);
@@ -105,9 +109,11 @@ export function useVapi(maxDuration: number = 60): UseVapiReturn {
           }
         });
 
-        vapi.on("error", (error: unknown) => {
-          console.error("[NaraAI] Vapi error:", error);
+        vapi.on("error", (err: any) => {
+          console.error("[NaraAI] Vapi error:", err);
           setStatus("idle");
+          const msg = err?.message || String(err);
+          setError(msg);
         });
       } catch (err) {
         console.warn(err);
@@ -186,5 +192,6 @@ export function useVapi(maxDuration: number = 60): UseVapiReturn {
     endCall,
     toggleMute,
     elapsedSeconds,
+    error,
   };
 }
