@@ -27,7 +27,7 @@ interface UseVapiReturn {
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────
-export function useVapi(): UseVapiReturn {
+export function useVapi(maxDuration: number = 60): UseVapiReturn {
   const [status, setStatus] = useState<VapiStatus>("idle");
   const [isMuted, setIsMuted] = useState(false);
   const [volumeLevel, setVolumeLevel] = useState(0);
@@ -37,6 +37,11 @@ export function useVapi(): UseVapiReturn {
 
   const vapiRef = useRef<Vapi | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const maxDurationRef = useRef(maxDuration);
+  useEffect(() => {
+    maxDurationRef.current = maxDuration;
+  }, [maxDuration]);
 
   // Initialize Vapi instance once
   useEffect(() => {
@@ -53,7 +58,18 @@ export function useVapi(): UseVapiReturn {
           setStatus("active");
           const start = Date.now();
           timerRef.current = setInterval(() => {
-            setElapsedSeconds(Math.floor((Date.now() - start) / 1000));
+            const elapsed = Math.floor((Date.now() - start) / 1000);
+            setElapsedSeconds(elapsed);
+            
+            // Batas maksimal sesuai quota trial
+            if (elapsed >= maxDurationRef.current) {
+              vapi.stop();
+              setStatus("idle");
+              if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+              }
+            }
           }, 1000);
         });
 

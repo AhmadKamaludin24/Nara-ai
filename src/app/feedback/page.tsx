@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { TranscriptMessage } from "@/hooks/use-vapi";
+import { calculateInterviewScore } from "@/lib/scoring";
 import Link from "next/link";
 
 interface FeedbackData {
@@ -11,6 +12,11 @@ interface FeedbackData {
   kepercayaanDiri: number;
   insight: string;
 }
+
+import { LoadingState } from "./_components/LoadingState";
+import { FeedbackHeader } from "./_components/FeedbackHeader";
+import { ScoreGrid } from "./_components/ScoreGrid";
+import { InsightCard } from "./_components/InsightCard";
 
 export default function FeedbackPage() {
   return (
@@ -33,6 +39,8 @@ function FeedbackContent() {
   const [candidateName, setCandidateName] = useState("Kandidat");
   const [roleName, setRoleName] = useState("");
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const savingRef = useRef(false);
 
   useEffect(() => {
@@ -44,6 +52,7 @@ function FeedbackContent() {
           if (!res.ok) throw new Error("Failed to fetch");
           const interview = await res.json();
           
+          setSavedId(interviewId);
           setRoleName(interview.role);
           setFeedback({
             komunikasi: interview.communication,
@@ -67,7 +76,6 @@ function FeedbackContent() {
         return;
       }
 
-      // Prevent double execution
       if (savingRef.current) return;
       savingRef.current = true;
 
@@ -75,23 +83,21 @@ function FeedbackContent() {
       setCandidateName(parsed.config.candidateName);
       setRoleName(parsed.config.role);
 
-      // Simulate AI Feedback Generation
       const msgs = parsed.transcripts as TranscriptMessage[];
-      const userMsgs = msgs.filter((m) => m.role === "user");
-
-      const baseScore = Math.min(60 + userMsgs.length * 5, 95);
-      const isShort = userMsgs.length < 3;
+      
+      const scoring = calculateInterviewScore(
+        msgs, 
+        parsed.config.candidateName, 
+        parsed.config.role
+      );
 
       const result: FeedbackData = {
-        komunikasi: isShort ? 65 : Math.min(baseScore + Math.floor(Math.random() * 10), 98),
-        teknikal: isShort ? 60 : Math.min(baseScore - 5 + Math.floor(Math.random() * 15), 95),
-        kepercayaanDiri: isShort ? 70 : Math.min(baseScore + 2 + Math.floor(Math.random() * 8), 99),
-        insight: isShort
-          ? "Sesi wawancara terlalu singkat untuk memberikan penilaian menyeluruh. Cobalah untuk lebih aktif berinteraksi dan menjelaskan pengalamanmu secara lebih rinci."
-          : `Kerja bagus, ${parsed.config.candidateName}! Kamu menunjukkan pemahaman yang cukup baik untuk posisi ${parsed.config.role}. Penjelasanmu terstruktur, namun ada ruang untuk lebih mendalami konsep teknis secara spesifik. Terus pertahankan rasa percaya dirimu!`,
+        komunikasi: scoring.komunikasi,
+        teknikal: scoring.teknikal,
+        kepercayaanDiri: scoring.kepercayaanDiri,
+        insight: scoring.insight,
       };
 
-      // Save to database
       try {
         const saveRes = await fetch("/api/interview", {
           method: "POST",
@@ -100,24 +106,26 @@ function FeedbackContent() {
             role: parsed.config.role,
             level: parsed.config.level,
             topic: parsed.config.topic || "Technical",
-            overallScore: Math.round((result.komunikasi + result.teknikal + result.kepercayaanDiri) / 3),
-            communication: result.komunikasi,
-            technical: result.teknikal,
-            confidence: result.kepercayaanDiri,
-            feedbackInsight: result.insight,
-            transcripts: msgs.map(m => ({ role: m.role, message: m.text }))
+            overallScore: scoring.overall,
+            communication: scoring.komunikasi,
+            technical: scoring.teknikal,
+            confidence: scoring.kepercayaanDiri,
+            feedbackInsight: scoring.insight,
+            transcripts: msgs.map(m => ({ role: m.role, message: m.text })),
+            elapsedSeconds: parsed.elapsedSeconds || 0
           }),
         });
         
         if (saveRes.ok) {
+          const saved = await saveRes.json();
+          setSavedId(saved.id);
           localStorage.removeItem("nara_interview_data");
         }
       } catch (err) {
         console.error("Failed to save interview:", err);
-        savingRef.current = false; // Allow retry on error if needed
+        savingRef.current = false;
       }
 
-      // Small delay for effect
       setTimeout(() => {
         setFeedback(result);
         setIsLoading(false);
@@ -127,120 +135,66 @@ function FeedbackContent() {
     loadFeedback();
   }, [router, interviewId]);
 
-  if (isLoading) {
-    return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-surface bg-dot-pattern selection:bg-primary-container">
-        <div className="flex flex-col items-center gap-6 p-12 bg-white border-4 border-black shadow-brutal max-w-lg w-full text-center">
-          <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase tracking-tighter">Menganalisa Sesi</h2>
-            <p className="text-on-surface-variant text-sm font-medium">Nara.AI sedang memproses transkrip dan merumuskan feedback untukmu...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  if (isLoading) return <LoadingState />;
   if (!feedback) return null;
 
+  const publicUrl = savedId ? `${window.location.origin}/f/${savedId}` : null;
+
+  const handleCopy = async () => {
+    if (!publicUrl) return;
+    await navigator.clipboard.writeText(publicUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
   return (
-    <div className="min-h-screen w-screen overflow-y-auto bg-surface bg-dot-pattern selection:bg-primary-container p-8 flex justify-center items-start">
-      <div className="w-full max-w-4xl flex flex-col gap-8 mt-10">
+    <div className="min-h-screen w-screen overflow-y-auto bg-surface bg-dot-pattern selection:bg-primary-container p-4 md:p-8 flex justify-center items-start">
+      <div className="w-full max-w-4xl flex flex-col gap-6 md:gap-8 mt-4 md:mt-10">
         
-        {/* Header */}
-        <div className="flex justify-between items-end border-b-4 border-black pb-6">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <span className="bg-black text-white px-3 py-1 text-xs font-black uppercase tracking-widest">
-                EVALUATION REPORT
-              </span>
-              <span className="text-style-label-bold uppercase opacity-60">NARA.AI</span>
-            </div>
-            <h1 className="text-5xl font-black uppercase tracking-tighter mt-2">
-              Hasil Interview
-            </h1>
-            <p className="text-lg font-medium">
-              Kandidat: <span className="font-bold">{candidateName}</span> — {roleName}
-            </p>
-          </div>
-          <Link 
-            href="/dashboard"
-            className="border-4 border-black bg-white px-6 py-3 font-bold uppercase text-sm shadow-brutal hover:-translate-y-1 hover:bg-primary-container transition-all"
-          >
-            Kembali ke Dashboard
-          </Link>
-        </div>
+        <FeedbackHeader candidateName={candidateName} roleName={roleName} />
 
-        {/* Scores Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Komunikasi */}
-          <div className="bg-white border-4 border-black p-6 shadow-brutal flex flex-col gap-4">
-            <div className="flex justify-between items-start">
-              <span className="font-black uppercase tracking-tighter text-xl">Komunikasi</span>
-              <span className="material-symbols-outlined text-3xl">forum</span>
+        <ScoreGrid 
+          komunikasi={feedback.komunikasi}
+          teknikal={feedback.teknikal}
+          kepercayaanDiri={feedback.kepercayaanDiri}
+        />
+
+        <InsightCard insight={feedback.insight} />
+
+        {/* ── Share Panel ── */}
+        {publicUrl && (
+          <div className="bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <div className="bg-black text-white p-4 flex items-center gap-3">
+              <span className="material-symbols-outlined text-[20px] text-[#FFD600]">share</span>
+              <h3 className="font-black uppercase tracking-widest text-sm">Bagikan Hasil Ini</h3>
             </div>
-            <div className="flex items-end gap-2 mt-auto">
-              <span className="text-6xl font-black tabular-nums tracking-tighter">{feedback.komunikasi}</span>
-              <span className="text-xl font-bold opacity-50 mb-2">/100</span>
+            <div className="p-4 border-b-4 border-black">
+              <p className="font-black uppercase text-xs tracking-widest text-zinc-500 mb-3">Link Publik (Tanpa Login)</p>
+              <div className="flex gap-2">
+                <div className="flex-1 bg-surface border-4 border-black px-3 py-2 font-mono text-xs truncate text-zinc-600">{publicUrl}</div>
+                <button onClick={handleCopy} className={`px-4 py-2 border-4 border-black font-black uppercase text-xs tracking-wide transition-all shrink-0 ${ copied ? "bg-green-400 text-black" : "bg-[#FFD600] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none" }`}>
+                  {copied ? "✓ Tersalin!" : "Salin"}
+                </button>
+              </div>
             </div>
-            <div className="w-full bg-surface-container-high h-2 border border-black mt-2">
-              <div 
-                className="h-full bg-accent-red transition-all duration-1000" 
-                style={{ width: `${feedback.komunikasi}%` }} 
-              />
+            <div className="p-4">
+              <p className="font-black uppercase text-xs tracking-widest text-zinc-500 mb-3">Bagikan ke</p>
+              <div className="flex flex-wrap gap-3">
+                <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Saya dapat skor ${feedback.komunikasi + feedback.teknikal + feedback.kepercayaanDiri}/300 di simulasi interview AI NARA.AI untuk posisi ${roleName}! 🎯`)}&url=${encodeURIComponent(publicUrl)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-black text-white border-4 border-black px-4 py-2 font-black uppercase text-xs shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                  Twitter / X
+                </a>
+                <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#0A66C2] text-white border-4 border-black px-4 py-2 font-black uppercase text-xs shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                  LinkedIn
+                </a>
+                <a href={`https://wa.me/?text=${encodeURIComponent(`Saya dapat skor di simulasi interview AI NARA.AI! Cek hasilnya: ${publicUrl}`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-[#25D366] text-white border-4 border-black px-4 py-2 font-black uppercase text-xs shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                  WhatsApp
+                </a>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Teknikal */}
-          <div className="bg-white border-4 border-black p-6 shadow-brutal flex flex-col gap-4">
-            <div className="flex justify-between items-start">
-              <span className="font-black uppercase tracking-tighter text-xl">Teknikal</span>
-              <span className="material-symbols-outlined text-3xl">code</span>
-            </div>
-            <div className="flex items-end gap-2 mt-auto">
-              <span className="text-6xl font-black tabular-nums tracking-tighter">{feedback.teknikal}</span>
-              <span className="text-xl font-bold opacity-50 mb-2">/100</span>
-            </div>
-            <div className="w-full bg-surface-container-high h-2 border border-black mt-2">
-              <div 
-                className="h-full bg-blue-500 transition-all duration-1000" 
-                style={{ width: `${feedback.teknikal}%` }} 
-              />
-            </div>
-          </div>
-
-          {/* Kepercayaan Diri */}
-          <div className="bg-white border-4 border-black p-6 shadow-brutal flex flex-col gap-4">
-            <div className="flex justify-between items-start">
-              <span className="font-black uppercase tracking-tighter text-xl leading-tight">Kepercayaan<br/>Diri</span>
-              <span className="material-symbols-outlined text-3xl">psychology</span>
-            </div>
-            <div className="flex items-end gap-2 mt-auto">
-              <span className="text-6xl font-black tabular-nums tracking-tighter">{feedback.kepercayaanDiri}</span>
-              <span className="text-xl font-bold opacity-50 mb-2">/100</span>
-            </div>
-            <div className="w-full bg-surface-container-high h-2 border border-black mt-2">
-              <div 
-                className="h-full bg-green-500 transition-all duration-1000" 
-                style={{ width: `${feedback.kepercayaanDiri}%` }} 
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Insight */}
-        <div className="bg-primary-container border-4 border-black p-8 shadow-brutal mt-4 relative">
-          <div className="absolute -top-4 -left-4 w-12 h-12 bg-white border-4 border-black flex items-center justify-center shadow-brutal rotate-[-10deg]">
-            <span className="material-symbols-outlined font-black">lightbulb</span>
-          </div>
-          <h2 className="text-2xl font-black uppercase tracking-tighter mb-4 ml-6">AI Insight</h2>
-          <p className="text-lg font-medium leading-relaxed">
-            {feedback.insight}
-          </p>
-        </div>
-
-        {/* Action */}
-        <div className="mt-8 flex justify-center">
+        <div className="mt-4 flex justify-center">
           <Link 
             href="/interview"
             className="bg-black text-white border-4 border-black px-10 py-4 font-black uppercase tracking-widest text-xl hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(255,100,100,1)] transition-all"

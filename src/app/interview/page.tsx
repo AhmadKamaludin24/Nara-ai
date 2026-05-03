@@ -6,6 +6,7 @@ import AudioVisualizer from "./_components/AudioVisualizer";
 import OnboardingForm from "./_components/OnboardingForm";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
 
 // ── Helper: format seconds to MM:SS ──
 function formatTime(totalSeconds: number): string {
@@ -16,12 +17,32 @@ function formatTime(totalSeconds: number): string {
   return `${m}:${s}`;
 }
 
+import { InterviewHeader } from "./_components/InterviewHeader";
+import { TranscriptSection } from "./_components/TranscriptSection";
+import { SessionControls } from "./_components/SessionControls";
+import { ConnectionStatus } from "./_components/ConnectionStatus";
+
 export default function InterviewPage() {
   const router = useRouter();
   const [config, setConfig] = useState<InterviewConfig | null>(null);
   const [showTranscript, setShowTranscript] = useState(true);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const hasStarted = useRef(false);
+  
+  const [trialSeconds, setTrialSeconds] = useState<number | null>(null);
+  const [loadingQuota, setLoadingQuota] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/user/quota")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.trialSeconds !== undefined) {
+          setTrialSeconds(d.trialSeconds);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch quota:", err))
+      .finally(() => setLoadingQuota(false));
+  }, []);
 
   const {
     status,
@@ -33,9 +54,8 @@ export default function InterviewPage() {
     endCall,
     toggleMute,
     elapsedSeconds,
-  } = useVapi();
+  } = useVapi(trialSeconds || 60);
 
-  // Auto-scroll transcript when new messages arrive
   useEffect(() => {
     if (showTranscript && transcriptEndRef.current) {
       transcriptEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -43,21 +63,56 @@ export default function InterviewPage() {
   }, [transcripts, activeTranscript, showTranscript]);
 
   const isActive = status === "active";
-  const isConnecting = status === "connecting";
 
-  // Redirect to feedback on call end
   useEffect(() => {
     if (isActive) {
       hasStarted.current = true;
     } else if (hasStarted.current && status === "idle") {
-      // Store transcript data for feedback generation
       localStorage.setItem("nara_interview_data", JSON.stringify({
         transcripts,
-        config
+        config,
+        elapsedSeconds
       }));
       router.push("/feedback");
     }
-  }, [status, isActive, router, transcripts, config]);
+  }, [status, isActive, router, transcripts, config, elapsedSeconds]);
+
+  const isModelActive = process.env.NEXT_PUBLIC_VAPI_STATUS !== "INACTIVE";
+
+  if (loadingQuota) {
+    return <LoadingScreen fullScreen message="Memeriksa Kuota Trial" />;
+  }
+
+  if (!isModelActive) {
+    return (
+      <div className="h-screen w-screen overflow-y-auto bg-surface flex flex-col items-center justify-center p-6 selection:bg-primary-container selection:text-text-main">
+        <div className="max-w-2xl w-full bg-white border-4 border-black p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] text-center relative overflow-hidden">
+          <div
+            className="absolute inset-0 opacity-5 pointer-events-none"
+            style={{
+              backgroundImage: "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)",
+              backgroundSize: "16px 16px",
+            }}
+          />
+          <div className="relative z-10 flex flex-col items-center">
+            <span className="material-symbols-outlined text-[64px] text-red-500 mb-4">
+              block
+            </span>
+            <h2 className="text-3xl font-black uppercase tracking-tighter mb-4 text-black">Model Nonaktif</h2>
+            <p className="text-zinc-600 font-bold mb-8">
+              Maaf, kuota token model AI saat ini sedang habis atau tidak tersedia. Silakan cek kembali nanti.
+            </p>
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="px-6 py-3 bg-black text-white font-black uppercase text-sm tracking-widest border-4 border-black shadow-[4px_4px_0px_0px_rgba(255,214,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+            >
+              Kembali ke Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!config) {
     return (
@@ -69,223 +124,59 @@ export default function InterviewPage() {
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col selection:bg-primary-container selection:text-text-main bg-surface">
-      {/* Header */}
-      <header className="flex justify-between items-center h-20 px-8 border-b-4 border-border-primary bg-background-main shrink-0 z-30 relative">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-4 h-4 rounded-full border-2 border-black ${isActive
-                ? "bg-accent-red animate-pulse"
-                : "bg-gray-300"
-                }`}
-            />
-            <span className="text-style-h3 text-text-main tracking-tighter italic font-black uppercase">
-              NARA.AI
-            </span>
-          </div>
-          <div className="h-8 w-1 bg-border-primary" />
-          <div
-            className={`flex items-center border-4 border-border-primary px-4 py-1 shadow-brutal rotate-1 ${isActive
-              ? "bg-primary-container"
-              : "bg-surface-container-high"
-              }`}
-          >
-            <span className="text-style-label-bold uppercase tracking-tighter text-black">
-              {isActive
-                ? "REC // SESI AKTIF"
-                : isConnecting
-                  ? "MENGHUBUNGKAN..."
-                  : "SIAP MEMULAI"}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3 bg-white border-4 border-border-primary px-6 py-2 shadow-brutal -rotate-1">
-            <span className="material-symbols-outlined text-text-main font-bold">
-              timer
-            </span>
-            <span className="text-style-h2 text-text-main tracking-tight tabular-nums">
-              {formatTime(elapsedSeconds)}
-            </span>
-          </div>
-          <button
-            onClick={endCall}
-            disabled={!isActive}
-            className="bg-accent-red text-on-primary border-4 border-border-primary px-8 py-3 flex items-center gap-2 text-style-label-bold uppercase tracking-widest shadow-brutal press-effect-lg hover:-translate-y-1 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-          >
-            <span className="material-symbols-outlined font-bold">
-              call_end
-            </span>
-            Akhiri Sesi
-          </button>
-        </div>
-      </header>
+      <InterviewHeader
+        status={status}
+        elapsedTime={formatTime(Math.max(0, (trialSeconds || 60) - elapsedSeconds))}
+        onEndCall={endCall}
+      />
 
-      {/* Main Canvas */}
       <main className="flex-1 flex flex-col relative overflow-hidden">
-        {/* Center Avatar Area */}
         <div className="flex-1 flex items-center justify-center relative bg-surface-container-lowest bg-dot-pattern">
-          {/* Large AI Interaction Container */}
           <div className="relative z-10 flex flex-col items-center">
-            {/* Dynamic Pulse Visual */}
-            <div className={`absolute inset-0 -m-20 flex items-center justify-center pointer-events-none transition-opacity duration-500 ${isActive ? "opacity-100" : "opacity-0"}`}>
-              <div
-                className={`w-[500px] h-[500px] rounded-full border-4 border-secondary-container/20 ${isActive ? "animate-pulse-ring" : ""
-                  }`}
-              />
-              <div
-                className={`absolute w-[440px] h-[440px] rounded-full border-4 border-secondary-container/40 ${isActive ? "animate-pulse-ring" : ""
-                  }`}
-                style={{ animationDelay: "0.5s" }}
-              />
+            <div className={`absolute inset-0 -m-10 md:-m-20 flex items-center justify-center pointer-events-none transition-opacity duration-500 ${isActive ? "opacity-100" : "opacity-0"}`}>
+              <div className={`w-[300px] h-[300px] md:w-[500px] md:h-[500px] rounded-full border-4 border-secondary-container/20 ${isActive ? "animate-pulse-ring" : ""}`} />
+              <div className={`absolute w-[260px] h-[260px] md:w-[440px] md:h-[440px] rounded-full border-4 border-secondary-container/40 ${isActive ? "animate-pulse-ring" : ""}`} style={{ animationDelay: "0.5s" }} />
             </div>
 
-            {/* Avatar Frame with Vapi-driven Audio Visualizer */}
             <AudioVisualizer
               status={status}
               volumeLevel={volumeLevel}
-              onStartCall={() => {
-                if (config) {
-                  startCall(config);
-                }
-              }}
+              onStartCall={() => config && startCall(config)}
             />
           </div>
 
-          {/* Background Decorative Elements */}
           <div className="absolute top-10 left-10 p-4 border-2 border-border-primary/20 font-mono text-xs opacity-50 select-none">
-            LATENCY: &lt;600ms
-            <br />
-            PROVIDER: VAPI
-            <br />
-            MODEL: GPT-4o
+            LATENCY: &lt;600ms<br />PROVIDER: VAPI<br />MODEL: GPT-4o
           </div>
           <div className="absolute bottom-10 right-10 p-4 border-2 border-border-primary/20 font-mono text-xs opacity-50 select-none text-right">
-            ENCRYPTION: AES-256
-            <br />
-            CODEC: OPUS_VOICE
-            <br />
-            ID: NRA-{elapsedSeconds.toString().padStart(4, "0")}
+            ENCRYPTION: AES-256<br />CODEC: OPUS_VOICE<br />ID: NRA-{elapsedSeconds.toString().padStart(4, "0")}
           </div>
         </div>
 
-        {/* Transcript & Controls Area */}
         <div className={`bg-surface-container border-t-4 border-border-primary flex flex-col z-20 relative transition-all duration-300 ${showTranscript ? "h-2/5 min-h-[340px]" : ""}`}>
-          {/* Floating Section Label */}
           {showTranscript && (
-            <div className="absolute -top-6 left-12 bg-black text-white px-4 py-1 border-2 border-black text-style-label-bold text-[12px] uppercase">
-              TRANSKRIP LANGSUNG
-            </div>
+            <>
+              <div className="absolute -top-6 left-12 bg-black text-white px-4 py-1 border-2 border-black text-style-label-bold text-[12px] uppercase">
+                TRANSKRIP LANGSUNG
+              </div>
+              <TranscriptSection
+                transcripts={transcripts}
+                activeTranscript={activeTranscript}
+                isActive={isActive}
+                transcriptEndRef={transcriptEndRef}
+              />
+            </>
           )}
 
-          {/* Transcript Bubbles */}
-          {showTranscript && (
-            <div className="flex-1 overflow-y-auto p-10 flex flex-col gap-6 bg-white/40">
-              {transcripts.length === 0 && !activeTranscript && (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-on-surface-variant text-style-body-lg italic text-center max-w-2xl">
-                    {isActive
-                      ? "Menunggu percakapan dimulai..."
-                      : "Klik tombol play di atas untuk memulai sesi interview dengan Nara."}
-                  </p>
-                </div>
-              )}
-
-              {/* Finalized transcripts */}
-              {transcripts.map((msg, i) => (
-                <TranscriptBubble key={i} message={msg} />
-              ))}
-
-              {/* Active partial transcript */}
-              {activeTranscript && (
-                <div className="flex justify-end max-w-4xl ml-auto">
-                  <div className="flex flex-row-reverse gap-4 items-start">
-                    <div className="w-12 h-12 shrink-0 bg-primary-container border-4 border-black shadow-brutal flex items-center justify-center">
-                      <span className="material-symbols-outlined text-black">
-                        person
-                      </span>
-                    </div>
-                    <div className="bg-primary-container/60 border-4 border-border-primary/60 p-6 shadow-brutal relative rounded-none">
-                      <div className="absolute top-4 -right-2 w-4 h-4 bg-primary-container/60 border-r-4 border-t-4 border-border-primary/60 rotate-45" />
-                      <p className="text-style-transcript text-text-main italic opacity-70">
-                        {activeTranscript}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Invisible div for auto-scrolling */}
-              <div ref={transcriptEndRef} />
-            </div>
-          )}
-
-          {/* Bottom Controls */}
-          <div className="border-t-4 border-border-primary bg-white p-6 flex justify-between items-center shrink-0">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={toggleMute}
-                disabled={!isActive}
-                className={`w-16 h-16 border-4 border-border-primary flex items-center justify-center shadow-brutal press-effect-lg transition-all group disabled:opacity-40 disabled:cursor-not-allowed ${isMuted
-                  ? "bg-accent-red text-white"
-                  : "bg-white hover:bg-surface-container-low"
-                  }`}
-              >
-                <span className="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform">
-                  {isMuted ? "mic_off" : "mic"}
-                </span>
-              </button>
-              <button
-                disabled={!isActive}
-                className="w-16 h-16 bg-white border-4 border-border-primary flex items-center justify-center shadow-brutal press-effect-lg hover:bg-surface-container-low transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <span className="material-symbols-outlined text-text-main text-3xl group-hover:scale-110 transition-transform">
-                  volume_up
-                </span>
-              </button>
-              <div className="h-10 w-1 bg-border-primary mx-2" />
-              <button
-                onClick={() => setShowTranscript((prev) => !prev)}
-
-                className="px-8 h-16 bg-primary-container border-4 border-border-primary flex items-center justify-center gap-3 shadow-brutal press-effect-lg hover:-translate-y-1 transition-all group text-style-label-bold text-text-main uppercase disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <span className="material-symbols-outlined font-bold">
-                  {showTranscript ? "subtitles_off" : "subtitles"}
-                </span>
-                {showTranscript ? "Sembunyikan Caption" : "Tampilkan Caption"}
-              </button>
-            </div>
-            <div className="flex items-center gap-6 bg-surface-container-high border-4 border-black px-6 py-3 shadow-brutal">
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] font-black uppercase tracking-tighter leading-none mb-1">
-                  Status Koneksi
-                </span>
-                <div className="flex gap-1.5 items-end h-6">
-                  {[2, 3, 4, 5, 6].map((h, i) => (
-                    <div
-                      key={i}
-                      className={`w-3 border border-black ${isActive && i < 4
-                        ? "bg-black"
-                        : "bg-white border-2"
-                        }`}
-                      style={{ height: `${h * 4}px` }}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-style-label-bold text-[12px] uppercase">
-                  {isActive
-                    ? "Terhubung"
-                    : isConnecting
-                      ? "Menghubungkan"
-                      : "Offline"}
-                </span>
-                <span className="text-[10px] font-mono opacity-60">
-                  {isActive ? "VAPI_STREAM" : "STANDBY"}
-                </span>
-              </div>
-            </div>
+          <div className="border-t-4 border-border-primary bg-white p-4 md:p-6 flex flex-col md:flex-row gap-4 justify-between items-center shrink-0">
+            <SessionControls
+              isActive={isActive}
+              isMuted={isMuted}
+              showTranscript={showTranscript}
+              onToggleMute={toggleMute}
+              onToggleTranscript={() => setShowTranscript(prev => !prev)}
+            />
+            <ConnectionStatus status={status} />
           </div>
         </div>
       </main>
