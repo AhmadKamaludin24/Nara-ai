@@ -34,7 +34,7 @@ function FeedbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const interviewId = searchParams.get("id");
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [candidateName, setCandidateName] = useState("Kandidat");
   const [roleName, setRoleName] = useState("");
@@ -51,7 +51,7 @@ function FeedbackContent() {
           const res = await fetch(`/api/interview/${interviewId}`);
           if (!res.ok) throw new Error("Failed to fetch");
           const interview = await res.json();
-          
+
           setSavedId(interviewId);
           setRoleName(interview.role);
           setFeedback({
@@ -84,10 +84,10 @@ function FeedbackContent() {
       setRoleName(parsed.config.role);
 
       const msgs = parsed.transcripts as TranscriptMessage[];
-      
+
       const scoring = calculateInterviewScore(
-        msgs, 
-        parsed.config.candidateName, 
+        msgs,
+        parsed.config.candidateName,
         parsed.config.role
       );
 
@@ -115,7 +115,7 @@ function FeedbackContent() {
             elapsedSeconds: parsed.elapsedSeconds || 0
           }),
         });
-        
+
         if (saveRes.ok) {
           const saved = await saveRes.json();
           setSavedId(saved.id);
@@ -150,10 +150,10 @@ function FeedbackContent() {
   return (
     <div className="min-h-screen w-screen overflow-y-auto bg-surface bg-dot-pattern selection:bg-primary-container p-4 md:p-8 flex justify-center items-start">
       <div className="w-full max-w-4xl flex flex-col gap-6 md:gap-8 mt-4 md:mt-10">
-        
+
         <FeedbackHeader candidateName={candidateName} roleName={roleName} />
 
-        <ScoreGrid 
+        <ScoreGrid
           komunikasi={feedback.komunikasi}
           teknikal={feedback.teknikal}
           kepercayaanDiri={feedback.kepercayaanDiri}
@@ -169,10 +169,10 @@ function FeedbackContent() {
               <h3 className="font-black uppercase tracking-widest text-sm">Bagikan Hasil Ini</h3>
             </div>
             <div className="p-4 border-b-4 border-black">
-              <p className="font-black uppercase text-xs tracking-widest text-zinc-500 mb-3">Link Publik (Tanpa Login)</p>
+              <p className="font-black uppercase text-xs tracking-widest text-zinc-500 mb-3">Link Publik</p>
               <div className="flex gap-2">
                 <div className="flex-1 bg-surface border-4 border-black px-3 py-2 font-mono text-xs truncate text-zinc-600">{publicUrl}</div>
-                <button onClick={handleCopy} className={`px-4 py-2 border-4 border-black font-black uppercase text-xs tracking-wide transition-all shrink-0 ${ copied ? "bg-green-400 text-black" : "bg-[#FFD600] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none" }`}>
+                <button onClick={handleCopy} className={`px-4 py-2 border-4 border-black font-black uppercase text-xs tracking-wide transition-all shrink-0 ${copied ? "bg-green-400 text-black" : "bg-[#FFD600] text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"}`}>
                   {copied ? "✓ Tersalin!" : "Salin"}
                 </button>
               </div>
@@ -195,7 +195,7 @@ function FeedbackContent() {
         )}
 
         <div className="mt-4 flex justify-center">
-          <Link 
+          <Link
             href="/interview"
             className="bg-black text-white border-4 border-black px-10 py-4 font-black uppercase tracking-widest text-xl hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(255,100,100,1)] transition-all"
           >

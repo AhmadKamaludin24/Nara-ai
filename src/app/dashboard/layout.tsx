@@ -43,7 +43,6 @@ export default function DashboardLayout({
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: "dashboard" },
-    { name: "Mulai Interview", href: "/interview", icon: "mic" },
     { name: "Riwayat", href: "/dashboard/history", icon: "history" },
     { name: "Performa", href: "/dashboard/performance", icon: "analytics" },
   ];
@@ -58,8 +57,8 @@ export default function DashboardLayout({
     <div className="flex h-screen bg-surface selection:bg-primary-container selection:text-text-main overflow-hidden">
       {/* Overlay mobile */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in duration-300" 
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in duration-300"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -83,7 +82,7 @@ export default function DashboardLayout({
               </p>
             </div>
           </div>
-          <button 
+          <button
             className="md:hidden text-black p-1 border-2 border-black bg-surface hover:bg-yellow-400"
             onClick={() => setSidebarOpen(false)}
           >
@@ -138,13 +137,13 @@ export default function DashboardLayout({
               {isLoggingOut ? "Keluar..." : "Keluar"}
             </button>
           </nav>
-          
+
           {/* Credit */}
           <div className="px-4 py-2 border-t-2 border-zinc-200 mt-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-1">A Project By</span>
-            <a 
-              href="https://github.com/AhmadKamaludin24" 
-              target="_blank" 
+            <a
+              href="https://github.com/AhmadKamaludin24"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-black uppercase tracking-wider hover:text-blue-600 transition-colors flex items-center gap-1"
             >
@@ -161,7 +160,7 @@ export default function DashboardLayout({
         <header className="flex justify-between items-center h-16 px-4 md:px-6 w-full top-0 border-b-4 border-black bg-white shadow-brutal z-30">
           <div className="flex items-center gap-3">
             {/* Hamburger Button */}
-            <button 
+            <button
               onClick={() => setSidebarOpen(true)}
               className="md:hidden flex items-center justify-center p-2 border-2 border-black bg-white shadow-brutal-sm hover:bg-yellow-400 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
             >

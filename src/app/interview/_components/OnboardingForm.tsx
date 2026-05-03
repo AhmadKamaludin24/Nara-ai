@@ -57,6 +57,56 @@ const PRESET_ROLES = {
       "Bagaimana Anda menangani data yang kotor atau tidak lengkap?",
     ],
   },
+  "Content Creator": {
+    emoji: "📸",
+    roleDescription: "Memproduksi konten kreatif untuk berbagai platform media sosial guna meningkatkan engagement.",
+    keySkills: ["Video Editing", "Copywriting", "Social Media Trends", "Storytelling"],
+    questions: [
+      "Gimana cara lo nentuin konten yang bakal viral di TikTok atau Reels?",
+      "Ceritain proses lo riset tren biar konten lo nggak ketinggalan zaman.",
+      "Pernah nggak dapet revisi banyak atau konten lo nggak perform? Gimana lo handle itu?",
+    ],
+  },
+  "Marketing Specialist": {
+    emoji: "🚀",
+    roleDescription: "Merancang strategi pemasaran digital untuk meningkatkan brand awareness dan konversi.",
+    keySkills: ["Digital Ads", "SEO", "Content Marketing", "Market Research"],
+    questions: [
+      "Gimana cara lo manage budget ads biar dapet ROI yang maksimal?",
+      "Ceritain strategi paling sukses yang pernah lo jalanin buat naikin brand awareness.",
+      "Gimana cara lo tetep kreatif meskipun harus ikutin data dan KPI yang ketat?",
+    ],
+  },
+  "HR Generalist": {
+    emoji: "🤝",
+    roleDescription: "Mengelola proses rekrutmen, administrasi karyawan, dan pengembangan budaya perusahaan.",
+    keySkills: ["Recruitment", "Labor Law", "Employee Relations", "Communication"],
+    questions: [
+      "Gimana cara lo handle kandidat atau karyawan yang bermasalah?",
+      "Proses rekrutmen kayak gimana yang menurut lo paling efektif saat ini?",
+      "Gimana cara lo jaga budaya kerja biar karyawan tetep betah dan produktif?",
+    ],
+  },
+  "Sales / BizDev": {
+    emoji: "💰",
+    roleDescription: "Mencari peluang bisnis baru, menjalin kemitraan, dan mencapai target penjualan.",
+    keySkills: ["Negotiation", "Networking", "Lead Generation", "Closing"],
+    questions: [
+      "Ceritain pengalaman lo pas berhasil closing deal paling gede.",
+      "Gimana cara lo handle penolakan dari prospek tanpa kerasa 'pushy'?",
+      "Strategi apa yang lo pake buat cari leads berkualitas di market yang udah jenuh?",
+    ],
+  },
+  "Customer Service": {
+    emoji: "🎧",
+    roleDescription: "Memberikan layanan terbaik bagi pelanggan dan menangani keluhan dengan solusi yang efektif.",
+    keySkills: ["Empathy", "Problem Solving", "Conflict Resolution", "Communication"],
+    questions: [
+      "Gimana cara lo ngadepin customer yang lagi marah-marah banget?",
+      "Ceritain situasi dimana lo berhasil bikin customer yang komplain jadi puas lagi.",
+      "Gimana cara lo tetep sabar dan ramah meskipun lagi handle banyak komplain dalam satu waktu?",
+    ],
+  },
 };
 
 const LEVELS = [
