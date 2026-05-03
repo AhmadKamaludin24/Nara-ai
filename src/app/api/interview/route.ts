@@ -26,29 +26,41 @@ export async function POST(req: Request) {
       strengths,
       weaknesses,
       transcripts, // Array of { role, message }
+      elapsedSeconds,
     } = body;
 
-    const interview = await prisma.interview.create({
-      data: {
-        userId: session.user.id,
-        role,
-        level,
-        topic,
-        overallScore,
-        communication,
-        technical,
-        confidence,
-        feedbackInsight,
-        strengths,
-        weaknesses,
-        transcripts: {
-          create: transcripts.map((t: any) => ({
-            role: t.role,
-            message: t.message,
-          })),
+    // Run in a transaction to ensure both interview creation and quota deduction succeed
+    const [interview] = await prisma.$transaction([
+      prisma.interview.create({
+        data: {
+          userId: session.user.id,
+          role,
+          level,
+          topic,
+          overallScore,
+          communication,
+          technical,
+          confidence,
+          feedbackInsight,
+          strengths,
+          weaknesses,
+          transcripts: {
+            create: transcripts.map((t: any) => ({
+              role: t.role,
+              message: t.message,
+            })),
+          },
         },
-      },
-    });
+      }),
+      prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+          trialSeconds: {
+            decrement: elapsedSeconds || 0,
+          },
+        },
+      }),
+    ]);
 
     return NextResponse.json(interview);
   } catch (error) {

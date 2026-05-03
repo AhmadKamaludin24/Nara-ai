@@ -120,7 +120,7 @@ body {
 /* Typography compound classes */
 .text-style-h1 {
   font-family: "Inter", sans-serif;
-  font-size: 48px;
+  font-size: clamp(2rem, 8vw, 3.5rem);
   line-height: 1.1;
   letter-spacing: -0.02em;
   font-weight: 800;
@@ -128,7 +128,7 @@ body {
 
 .text-style-h2 {
   font-family: "Inter", sans-serif;
-  font-size: 32px;
+  font-size: clamp(1.5rem, 5vw, 2rem);
   line-height: 1.2;
   font-weight: 800;
 }
@@ -216,4 +216,28 @@ body {
 .bg-dot-pattern {
   background-image: radial-gradient(rgba(0, 0, 0, 0.2) 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+/* --- Loading Bar Animation --- */
+@keyframes loadingBar {
+  0%, 100% {
+    transform: scaleY(0.2);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* --- Dialog Pop-in Animation --- */
+@keyframes dialogPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }

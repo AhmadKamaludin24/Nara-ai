@@ -229,4 +229,6 @@ Kamu adalah Nara, AI Interviewer profesional dengan kepribadian ramah, observati
     summaryPlan: { enabled: false },
     successEvaluationPlan: { enabled: false },
   },
+
+
 };
