@@ -72,6 +72,7 @@ export async function Navbar() {
             {session ? "Dashboard" : "Login"}
           </Link>
           <Link
+            prefetch
             href="/interview"
             className="bg-primary-container text-black border-[3px] border-black shadow-brutal text-style-label-bold uppercase px-3 md:px-6 py-2 press-effect hover:-translate-y-0.5 transition-all flex items-center gap-2"
           >

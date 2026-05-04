@@ -14,38 +14,45 @@ export function SessionControls({
   onToggleTranscript,
 }: SessionControlsProps) {
   return (
-    <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-      <button
-        onClick={onToggleMute}
-        disabled={!isActive}
-        className={`w-14 h-14 md:w-16 md:h-16 shrink-0 border-4 border-border-primary flex items-center justify-center shadow-brutal press-effect-lg transition-all group disabled:opacity-40 disabled:cursor-not-allowed ${
-          isMuted ? "bg-accent-red text-white" : "bg-white hover:bg-surface-container-low"
-        }`}
-      >
-        <span className="material-symbols-outlined text-2xl md:text-3xl group-hover:scale-110 transition-transform">
-          {isMuted ? "mic_off" : "mic"}
-        </span>
-      </button>
-      <button
-        disabled={!isActive}
-        className="w-14 h-14 md:w-16 md:h-16 shrink-0 bg-white border-4 border-border-primary flex items-center justify-center shadow-brutal press-effect-lg hover:bg-surface-container-low transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        <span className="material-symbols-outlined text-text-main text-2xl md:text-3xl group-hover:scale-110 transition-transform">
-          volume_up
-        </span>
-      </button>
-      <div className="h-10 w-1 bg-border-primary mx-1 md:mx-2 shrink-0" />
+    <div className="flex items-center justify-center md:justify-start gap-3 md:gap-4 w-full md:w-auto">
+      <div className="flex items-center gap-2 md:gap-4">
+        <button
+          onClick={onToggleMute}
+          disabled={!isActive}
+          className={`w-12 h-12 md:w-16 md:h-16 shrink-0 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group disabled:opacity-40 disabled:cursor-not-allowed ${
+            isMuted ? "bg-accent-red text-white" : "bg-white hover:bg-zinc-50"
+          }`}
+          title={isMuted ? "Unmute" : "Mute"}
+        >
+          <span className="material-symbols-outlined text-xl md:text-3xl group-hover:scale-110 transition-transform">
+            {isMuted ? "mic_off" : "mic"}
+          </span>
+        </button>
+        <button
+          disabled={!isActive}
+          className="w-12 h-12 md:w-16 md:h-16 shrink-0 bg-white border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none hover:bg-zinc-50 transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
+          title="Adjust Volume"
+        >
+          <span className="material-symbols-outlined text-black text-xl md:text-3xl group-hover:scale-110 transition-transform">
+            volume_up
+          </span>
+        </button>
+      </div>
+
+      <div className="h-8 md:h-10 w-1 bg-black mx-1 md:mx-2 shrink-0" />
+
       <button
         onClick={onToggleTranscript}
-        className="px-4 md:px-8 h-14 md:h-16 bg-primary-container border-4 border-border-primary flex items-center justify-center gap-2 md:gap-3 shadow-brutal press-effect-lg hover:-translate-y-1 transition-all group text-style-label-bold text-text-main uppercase whitespace-nowrap"
+        className={`flex-1 md:flex-none px-4 md:px-8 h-12 md:h-16 border-4 border-black flex items-center justify-center gap-2 md:gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all group text-[11px] md:text-sm font-black uppercase tracking-wider whitespace-nowrap ${
+          showTranscript ? "bg-black text-white" : "bg-[#FFD600] text-black"
+        }`}
       >
-        <span className="material-symbols-outlined font-bold text-xl md:text-2xl">
+        <span className="material-symbols-outlined font-bold text-lg md:text-2xl">
           {showTranscript ? "subtitles_off" : "subtitles"}
         </span>
-        <span className="hidden sm:inline">
-          {showTranscript ? "Sembunyikan Caption" : "Tampilkan Caption"}
+        <span>
+          {showTranscript ? "Hide" : "Transcript"}
         </span>
-        <span className="sm:hidden">Caption</span>
       </button>
     </div>
   );

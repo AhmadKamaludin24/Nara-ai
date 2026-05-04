@@ -28,7 +28,7 @@ export default function InterviewClient({ initialTrialSeconds }: { initialTrialS
   const [showTranscript, setShowTranscript] = useState(true);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const hasStarted = useRef(false);
-  
+
   const [trialSeconds] = useState<number>(initialTrialSeconds);
 
   const {
@@ -50,6 +50,13 @@ export default function InterviewClient({ initialTrialSeconds }: { initialTrialS
       router.push(`/interview/error?message=${encodeURIComponent(error)}`);
     }
   }, [error, router]);
+
+  useEffect(() => {
+    // Hide transcript by default on mobile
+    if (window.innerWidth < 768) {
+      setShowTranscript(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (showTranscript && transcriptEndRef.current) {
@@ -122,10 +129,11 @@ export default function InterviewClient({ initialTrialSeconds }: { initialTrialS
       />
 
       <main className="flex-1 flex flex-col relative overflow-hidden">
-        <div className="flex-1 flex items-center justify-center relative bg-surface-container-lowest bg-dot-pattern">
-          <div className="relative z-10 flex flex-col items-center">
+        {/* Main Interaction Area */}
+        <div className="flex-1 flex items-center justify-center relative bg-surface-container-lowest bg-dot-pattern overflow-hidden">
+          <div className="relative z-10 flex flex-col items-center scale-90 md:scale-100">
             <div className={`absolute inset-0 -m-10 md:-m-20 flex items-center justify-center pointer-events-none transition-opacity duration-500 ${isActive ? "opacity-100" : "opacity-0"}`}>
-              <div className={`w-[300px] h-[300px] md:w-[500px] md:h-[500px] rounded-full border-4 border-secondary-container/20 ${isActive ? "animate-pulse-ring" : ""}`} />
+              <div className={`w-[200px] h-[200px] md:w-[500px] md:h-[500px] rounded-full border-4 border-secondary-container/20 ${isActive ? "animate-pulse-ring" : ""}`} />
               <div className={`absolute w-[260px] h-[260px] md:w-[440px] md:h-[440px] rounded-full border-4 border-secondary-container/40 ${isActive ? "animate-pulse-ring" : ""}`} style={{ animationDelay: "0.5s" }} />
             </div>
 
@@ -136,44 +144,77 @@ export default function InterviewClient({ initialTrialSeconds }: { initialTrialS
             />
           </div>
 
-          <div className="absolute top-10 left-10 p-4 border-2 border-border-primary/20 font-mono text-xs opacity-50 select-none">
+          <div className="absolute top-6 md:top-10 left-6 md:left-10 p-3 md:p-4 border-2 border-border-primary/20 font-mono text-[10px] md:text-xs opacity-50 select-none">
             LATENCY: &lt;600ms<br />PROVIDER: VAPI<br />MODEL: GPT-4o
           </div>
-          <div className="absolute bottom-10 right-10 p-4 border-2 border-border-primary/20 font-mono text-xs opacity-50 select-none text-right">
+          <div className="absolute bottom-6 md:bottom-10 right-6 md:right-10 p-3 md:p-4 border-2 border-border-primary/20 font-mono text-[10px] md:text-xs opacity-50 select-none text-right">
             ENCRYPTION: AES-256<br />CODEC: OPUS_VOICE<br />ID: NRA-{elapsedSeconds.toString().padStart(4, "0")}
           </div>
         </div>
 
-        <div className={`bg-surface-container border-t-4 border-border-primary flex flex-col z-20 relative transition-all duration-300 ${showTranscript ? "h-2/5 min-h-[340px]" : ""}`}>
-          {showTranscript && (
-            <>
-              <div className="absolute -top-6 left-12 bg-black text-white px-4 py-1 border-2 border-black text-style-label-bold text-[12px] uppercase">
-                TRANSKRIP LANGSUNG
-              </div>
+        {/* Mobile Transcript Overlay (Drawer Style) */}
+        {showTranscript && (
+          <div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center justify-between p-4 border-b-4 border-black bg-primary-container">
+              <span className="font-black uppercase tracking-widest text-sm">Transkrip Langsung</span>
+              <button 
+                onClick={() => setShowTranscript(false)}
+                className="w-10 h-10 border-2 border-black flex items-center justify-center bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
               <TranscriptSection
                 transcripts={transcripts}
                 activeTranscript={activeTranscript}
                 isActive={isActive}
                 transcriptEndRef={transcriptEndRef}
               />
-            </>
-          )}
+            </div>
+          </div>
+        )}
 
+        {/* Desktop Transcript / Control Bar */}
+        <div className={`bg-surface-container border-t-4 border-border-primary flex flex-col z-20 relative transition-all duration-300 ${showTranscript ? "md:h-2/5 md:min-h-[340px]" : "h-auto"}`}>
+          {/* Desktop Only Transcript Section */}
+          <div className="hidden md:block overflow-hidden flex-1">
+            {showTranscript && (
+              <>
+                <div className="absolute -top-6 left-12 bg-black text-white px-4 py-1 border-2 border-black text-style-label-bold text-[12px] uppercase z-30">
+                  TRANSKRIP LANGSUNG
+                </div>
+                <TranscriptSection
+                  transcripts={transcripts}
+                  activeTranscript={activeTranscript}
+                  isActive={isActive}
+                  transcriptEndRef={transcriptEndRef}
+                />
+              </>
+            )}
+          </div>
+
+          {/* Controls Bar - Optimized for both mobile and desktop */}
           <div className="border-t-4 border-border-primary bg-white p-4 md:p-6 flex flex-col md:flex-row gap-4 justify-between items-center shrink-0">
-            <SessionControls
-              isActive={isActive}
-              isMuted={isMuted}
-              showTranscript={showTranscript}
-              onToggleMute={toggleMute}
-              onToggleTranscript={() => setShowTranscript(prev => !prev)}
-            />
-            <ConnectionStatus status={status} />
+            <div className="w-full md:w-auto">
+              <SessionControls
+                isActive={isActive}
+                isMuted={isMuted}
+                showTranscript={showTranscript}
+                onToggleMute={toggleMute}
+                onToggleTranscript={() => setShowTranscript(prev => !prev)}
+              />
+            </div>
+            <div className="hidden md:block">
+              <ConnectionStatus status={status} />
+            </div>
           </div>
         </div>
       </main>
     </div>
   );
 }
+
 
 // ── Transcript Bubble Component ──────────────────────────────────────
 function TranscriptBubble({ message }: { message: TranscriptMessage }) {
