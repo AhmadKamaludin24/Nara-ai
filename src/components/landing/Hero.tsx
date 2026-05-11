@@ -1,9 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogVariant } from "../ui/Dialog";
-import { set } from "better-auth";
 
 export function Hero() {
   const [dialog, setDialog] = useState<{
@@ -18,13 +16,14 @@ export function Hero() {
     variant: "error",
   });
 
-  const searchParams = useSearchParams();
 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkError = () => {
-      const err = searchParams.get("error");
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("error");
+
       if (err === "TOKEN_EXPIRED") {
         setError(err);
       }
