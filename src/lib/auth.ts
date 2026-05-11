@@ -15,6 +15,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+
   },
 
   emailVerification: {
@@ -30,6 +31,7 @@ export const auth = betterAuth({
         html: generateVerificationEmail({
           name: user.name,
           verificationUrl: url,
+          websiteUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
         }),
       });
 

@@ -1,6 +1,38 @@
+"use client";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { Dialog, DialogVariant } from "../ui/Dialog";
+import { set } from "better-auth";
 
 export function Hero() {
+  const [dialog, setDialog] = useState<{
+    open: boolean;
+    title: string;
+    desc: string;
+    variant: DialogVariant;
+  }>({
+    open: true,
+    title: "TOKEN EXPIRED",
+    desc: "maaf token anda sudah expired, silakan login/register kembali untuk melanjutkan.",
+    variant: "error",
+  });
+
+  const searchParams = useSearchParams();
+
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkError = () => {
+      const err = searchParams.get("error");
+      if (err === "TOKEN_EXPIRED") {
+        setError(err);
+      }
+    };
+
+    checkError();
+  }, [error]);
+
   return (
     <section className="relative bg-background-main border-b-4 border-black overflow-hidden">
       {/* Dot pattern background */}
@@ -29,9 +61,9 @@ export function Hero() {
             </h1>
 
             <p className="text-base md:text-style-body-lg text-on-surface-variant max-w-2xk">
-              Bicara langsung dengan <strong>Nara</strong>, AI interviewer
-              yang memahami konteks dan memberikan feedback real-time.
-              Tingkatkan skill interview kamu sebelum hari-H.
+              Bicara langsung dengan <strong>Nara</strong>, AI interviewer yang
+              memahami konteks dan memberikan feedback real-time. Tingkatkan
+              skill interview kamu sebelum hari-H.
             </p>
 
             <div className="flex flex-col sm:flex-row flex-wrap gap-4">
@@ -48,9 +80,7 @@ export function Hero() {
                 href="#cara-kerja"
                 className="bg-white text-text-main border-4 border-black shadow-brutal text-lg md:text-style-h3 uppercase px-6 py-3 md:px-10 md:py-4 press-effect hover:-translate-y-1 transition-all flex items-center justify-center gap-3"
               >
-                <span className="material-symbols-outlined text-2xl">
-                  info
-                </span>
+                <span className="material-symbols-outlined text-2xl">info</span>
                 Pelajari
               </a>
             </div>
@@ -131,6 +161,15 @@ export function Hero() {
           </div>
         </div>
       </div>
+      {error === "TOKEN_EXPIRED" && (
+        <Dialog
+          open={dialog.open}
+          onClose={() => setDialog((prev) => ({ ...prev, open: false }))}
+          title={dialog.title}
+          description={dialog.desc}
+          variant={dialog.variant}
+        />
+      )}
     </section>
   );
 }
