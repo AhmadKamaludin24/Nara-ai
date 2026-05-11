@@ -1,13 +1,14 @@
 interface VerificationEmailProps {
   name: string;
   verificationUrl: string;
+  websiteUrl?: string;
 }
 
 /**
  * Generates the HTML for the email verification email.
  * Designed with a premium neo-brutalist aesthetic — bold, clean, and unmissable.
  */
-export function generateVerificationEmail({ name, verificationUrl }: VerificationEmailProps): string {
+export function generateVerificationEmail({ name, verificationUrl, websiteUrl }: VerificationEmailProps): string {
   return `<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -314,7 +315,7 @@ export function generateVerificationEmail({ name, verificationUrl }: Verificatio
       <div class="body">
         <p class="greeting">Halo, ${name}! 👋</p>
         <p class="body-text">
-          Terima kasih telah mendaftar di <strong>NARA.AI</strong>. Untuk mengaktifkan akunmu dan mulai berlatih interview bersama Nara, kamu perlu memverifikasi alamat email ini terlebih dahulu.
+          Terima kasih telah mendaftar di <a href="${websiteUrl}" target="_blank">NARA.AI</a>. Untuk mengaktifkan akunmu dan mulai berlatih interview bersama Nara, kamu perlu memverifikasi alamat email ini terlebih dahulu.
         </p>
 
         <!-- CTA -->
@@ -362,7 +363,6 @@ export function generateVerificationEmail({ name, verificationUrl }: Verificatio
       <span class="footer-brand">NARA.AI — AI Interview Simulator</span>
       <p>
         Email ini dikirim secara otomatis. Mohon jangan membalas email ini.<br/>
-        Jika butuh bantuan, hubungi <a href="mailto:support@nara-ai.com">support@nara-ai.com</a>
       </p>
     </div>
 
