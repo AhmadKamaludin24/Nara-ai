@@ -89,7 +89,7 @@ export const NARA_ASSISTANT_CONFIG = {
   // ── LLM Model ──
   model: {
     provider: "google" as const,
-    model: "gemini-2.0-flash" as const,
+    model: "gemini-2.5-flash" as const,
     temperature: 0.7,
     messages: [
       {
